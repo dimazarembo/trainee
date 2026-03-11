@@ -74,4 +74,12 @@ public class PaymentCardService {
 
         return paymentCardRepository.countByUserIdJpql(userId);
     }
+
+    @Transactional
+    public void delete(Long cardId) {
+        PaymentCardEntity card = getById(cardId);
+        UserEntity user = card.getUser();
+        user.removePaymentCard(card);
+        userRepository.save(user);
+    }
 }

@@ -56,4 +56,10 @@ public class UserService {
         existingUser.setActive(false);
         return userRepository.save(existingUser);
     }
+
+    @Transactional
+    public void delete(Long id) {
+        UserEntity user = getById(id);
+        userRepository.delete(user);
+    }
 }
