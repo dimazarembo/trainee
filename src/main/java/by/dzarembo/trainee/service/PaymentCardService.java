@@ -44,7 +44,7 @@ public class PaymentCardService {
     }
 
     public List<PaymentCardEntity> getAllByUserId(Long userId) {
-        return paymentCardRepository.findAllByUserIdNative(userId);
+        return paymentCardRepository.findAllByUserId(userId);
     }
 
     @Transactional
