@@ -2,10 +2,12 @@ package by.dzarembo.trainee.service;
 
 import by.dzarembo.trainee.entity.PaymentCardEntity;
 import by.dzarembo.trainee.entity.UserEntity;
+import by.dzarembo.trainee.exception.CardLimitExceedException;
+import by.dzarembo.trainee.exception.PaymentCardNotFoundException;
+import by.dzarembo.trainee.exception.UserNotFoundException;
 import by.dzarembo.trainee.repository.PaymentCardRepository;
 import by.dzarembo.trainee.repository.UserRepository;
 import by.dzarembo.trainee.specification.PaymentCardSpecification;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,8 +27,9 @@ public class PaymentCardService {
     @Transactional
     public PaymentCardEntity create(Long userId, PaymentCardEntity card) {
         if (countByUserId(userId) >= 5)
-            throw new IllegalStateException(String.format("User with id %d already has 5 cards", userId));
-        UserEntity user = userRepository.findById(userId).orElseThrow(EntityNotFoundException::new);
+            throw new CardLimitExceedException(String.format("User with id %d already has 5 cards", userId));
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(String.format("User with id %d not found", userId)));
         user.addPaymentCard(card);
         userRepository.save(user);
         return card;
@@ -34,7 +37,7 @@ public class PaymentCardService {
 
     public PaymentCardEntity getById(Long id) {
         return paymentCardRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Payment card not found with id: " + id));
+                .orElseThrow(() -> new PaymentCardNotFoundException(String.format("Payment card with id %d not found", id)));
     }
 
     public Page<PaymentCardEntity> getAll(String name, String surname, Pageable pageable) {
@@ -44,6 +47,9 @@ public class PaymentCardService {
     }
 
     public List<PaymentCardEntity> getAllByUserId(Long userId) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
+
         return paymentCardRepository.findAllByUserId(userId);
     }
 
