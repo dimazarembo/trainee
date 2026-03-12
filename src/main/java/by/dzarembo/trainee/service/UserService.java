@@ -1,9 +1,9 @@
 package by.dzarembo.trainee.service;
 
 import by.dzarembo.trainee.entity.UserEntity;
+import by.dzarembo.trainee.exception.UserNotFoundException;
 import by.dzarembo.trainee.repository.UserRepository;
 import by.dzarembo.trainee.specification.UserSpecification;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,7 +25,7 @@ public class UserService {
 
     public UserEntity getById(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
     }
 
     public Page<UserEntity> getAll(String name, String surname, Pageable pageable) {
