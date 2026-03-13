@@ -1,9 +1,6 @@
 package by.dzarembo.trainee.controller;
 
-import by.dzarembo.trainee.dto.PaymentCardResponse;
-import by.dzarembo.trainee.dto.UserCreateRequest;
-import by.dzarembo.trainee.dto.UserResponse;
-import by.dzarembo.trainee.dto.UserUpdateRequest;
+import by.dzarembo.trainee.dto.*;
 import by.dzarembo.trainee.mapper.PaymentCardMapper;
 import by.dzarembo.trainee.mapper.UserMapper;
 import by.dzarembo.trainee.service.PaymentCardService;
@@ -40,6 +37,11 @@ public class UserController {
     ) {
         Page<UserResponse> response = userService.getAll(name, surname, pageable).map(userMapper::toResponse);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{userId}/with-cards")
+    public ResponseEntity<UserWithCardsResponse> getUserWithCards(@PathVariable Long userId) {
+        return ResponseEntity.ok(userService.getUserWithCards(userId));
     }
 
     @PostMapping
