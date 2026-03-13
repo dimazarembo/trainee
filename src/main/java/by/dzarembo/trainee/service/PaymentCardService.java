@@ -10,6 +10,8 @@ import by.dzarembo.trainee.repository.UserRepository;
 import by.dzarembo.trainee.specification.PaymentCardSpecification;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -23,6 +25,7 @@ public class PaymentCardService {
 
     private final PaymentCardRepository paymentCardRepository;
     private final UserRepository userRepository;
+    private final CacheManager cacheManager;
 
     @Transactional
     public PaymentCardEntity create(Long userId, PaymentCardEntity card) {
@@ -32,6 +35,7 @@ public class PaymentCardService {
                 .orElseThrow(() -> new UserNotFoundException(String.format("User with id %d not found", userId)));
         user.addPaymentCard(card);
         userRepository.save(user);
+        evictUserWithCardsCache(userId);
         return card;
     }
 
@@ -59,21 +63,33 @@ public class PaymentCardService {
         existingPaymentCard.setCardNumber(card.getCardNumber());
         existingPaymentCard.setHolderName(card.getHolderName());
         existingPaymentCard.setExpirationDate(card.getExpirationDate());
-        return paymentCardRepository.save(existingPaymentCard);
+        var savedCard = paymentCardRepository.save(existingPaymentCard);
+
+        evictUserWithCardsCache(existingPaymentCard.getUser().getId());
+
+        return savedCard;
     }
 
     @Transactional
     public PaymentCardEntity activate(Long cardId) {
         PaymentCardEntity existingPaymentCard = getById(cardId);
         existingPaymentCard.setActive(true);
-        return paymentCardRepository.save(existingPaymentCard);
+        var savedCard = paymentCardRepository.save(existingPaymentCard);
+
+        evictUserWithCardsCache(existingPaymentCard.getUser().getId());
+
+        return savedCard;
     }
 
     @Transactional
     public PaymentCardEntity deactivate(Long cardId) {
         PaymentCardEntity existingPaymentCard = getById(cardId);
         existingPaymentCard.setActive(false);
-        return paymentCardRepository.save(existingPaymentCard);
+        var savedCard = paymentCardRepository.save(existingPaymentCard);
+
+        evictUserWithCardsCache(existingPaymentCard.getUser().getId());
+
+        return savedCard;
     }
 
     private long countByUserId(Long userId) {
@@ -87,5 +103,13 @@ public class PaymentCardService {
         UserEntity user = card.getUser();
         user.removePaymentCard(card);
         userRepository.save(user);
+        evictUserWithCardsCache(user.getId());
+    }
+
+    private void evictUserWithCardsCache(Long userId) {
+        Cache cache = cacheManager.getCache("usersWithCards");
+        if (cache != null) {
+            cache.evict(userId);
+        }
     }
 }

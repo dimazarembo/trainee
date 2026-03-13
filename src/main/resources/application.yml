@@ -11,3 +11,10 @@ spring:
   jpa:
     hibernate:
       ddl-auto: none
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      password: ${REDIS_PASSWORD}
+      port: ${REDIS_PORT}
+  cache:
+    type: redis
