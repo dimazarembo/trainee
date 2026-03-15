@@ -29,14 +29,19 @@ public class PaymentCardService {
 
     @Transactional
     public PaymentCardEntity create(Long userId, PaymentCardEntity card) {
-        if (countByUserId(userId) >= 5)
+        if (countByUserId(userId) >= 5) {
             throw new CardLimitExceedException(String.format("User with id %d already has 5 cards", userId));
+        }
+
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(String.format("User with id %d not found", userId)));
+
         user.addPaymentCard(card);
-        userRepository.save(user);
+
+        PaymentCardEntity savedCard = paymentCardRepository.saveAndFlush(card);
+
         evictUserWithCardsCache(userId);
-        return card;
+        return savedCard;
     }
 
     public PaymentCardEntity getById(Long id) {
