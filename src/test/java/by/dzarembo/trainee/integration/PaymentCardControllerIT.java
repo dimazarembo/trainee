@@ -47,6 +47,45 @@ public class PaymentCardControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    void createPaymentCard_shouldReturnBadRequest_whenUserAlreadyHasFiveCards() throws Exception {
+        UserEntity user = new UserEntity();
+        user.setName("Ivan");
+        user.setSurname("Ivanov");
+        user.setBirthday(LocalDate.of(1995, 5, 10));
+        user.setEmail("ivanov@test.com");
+        user.setActive(true);
+
+        UserEntity savedUser = userRepository.save(user);
+
+        for (int i = 0; i < 5; i++) {
+            PaymentCardEntity card = new PaymentCardEntity();
+            card.setUser(savedUser);
+            card.setCardNumber("111122223333444" + i);
+            card.setHolderName("Ivan Ivanov");
+            card.setExpirationDate(LocalDate.of(2030 + i, 1, 1));
+            card.setActive(true);
+            paymentCardRepository.save(card);
+        }
+
+        PaymentCardCreateRequest request = PaymentCardCreateRequest.builder()
+                .userId(savedUser.getId())
+                .cardNumber("9999000011112222")
+                .holderName("Ivan Ivanov")
+                .expirationDate(LocalDate.of(2035, 1, 1))
+                .build();
+
+        mockMvc.perform(post("/cards")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message")
+                        .value("User with id " + savedUser.getId() + " already has 5 cards"));
+
+        assertThat(paymentCardRepository.findAllByUserId(savedUser.getId())).hasSize(5);
+    }
+
+    @Test
     void getPaymentCard_shouldReturnCard() throws Exception {
         UserEntity user = new UserEntity();
         user.setName("Ivan");
