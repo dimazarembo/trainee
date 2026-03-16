@@ -4,7 +4,6 @@ import by.dzarembo.trainee.dto.ErrorResponse;
 import by.dzarembo.trainee.exception.CardLimitExceedException;
 import by.dzarembo.trainee.exception.PaymentCardNotFoundException;
 import by.dzarembo.trainee.exception.UserNotFoundException;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;

@@ -8,15 +8,15 @@ import by.dzarembo.trainee.mapper.UserWithCardsMapper;
 import by.dzarembo.trainee.repository.PaymentCardRepository;
 import by.dzarembo.trainee.repository.UserRepository;
 import by.dzarembo.trainee.specification.UserSpecification;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.transaction.annotation.Transactional;
-import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -67,16 +67,13 @@ public class UserService {
     @CacheEvict(value = "usersWithCards", key = "#id")
     @Transactional
     public UserEntity deactivate(Long id) {
-        UserEntity existingUser = getById(id);
-        existingUser.setActive(false);
-        return userRepository.save(existingUser);
+        return deactivateUserWithCards(id);
     }
 
     @CacheEvict(value = "usersWithCards", key = "#id")
     @Transactional
     public void delete(Long id) {
-        UserEntity user = getById(id);
-        userRepository.delete(user);
+        deactivateUserWithCards(id);
     }
 
     @Cacheable(value = "usersWithCards", key = "#userId")
@@ -89,5 +86,16 @@ public class UserService {
         UserWithCardsResponse response = userWithCardsMapper.toResponse(userEntity);
         response.setCards(cards.stream().map(userWithCardsMapper::toCardInfoResponse).toList());
         return response;
+    }
+
+    private UserEntity deactivateUserWithCards(Long userId) {
+        UserEntity user = getById(userId);
+
+        List<PaymentCardEntity> cards = paymentCardRepository.findAllByUserId(userId);
+        for (PaymentCardEntity paymentCardEntity : cards) {
+            paymentCardEntity.setActive(false);
+        }
+        user.setActive(false);
+        return userRepository.save(user);
     }
 }

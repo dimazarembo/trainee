@@ -134,6 +134,14 @@ public class UserControllerIT extends AbstractIntegrationTest{
         user.setActive(true);
 
         UserEntity savedUser = userRepository.save(user);
+        PaymentCardEntity card = new PaymentCardEntity();
+        card.setUser(savedUser);
+        card.setCardNumber("1111222233334444");
+        card.setHolderName("Ivan Ivanov");
+        card.setExpirationDate(LocalDate.of(2030, 1, 1));
+        card.setActive(true);
+
+        PaymentCardEntity savedCard = paymentCardRepository.save(card);
 
         mockMvc.perform(patch("/users/{id}/deactivate", savedUser.getId()))
                 .andExpect(status().isOk())
@@ -141,7 +149,9 @@ public class UserControllerIT extends AbstractIntegrationTest{
                 .andExpect(jsonPath("$.active").value(false));
 
         UserEntity deactivatedUser = userRepository.findById(savedUser.getId()).orElseThrow();
+        PaymentCardEntity deactivatedCard = paymentCardRepository.findById(savedCard.getId()).orElseThrow();
         assertThat(deactivatedUser.isActive()).isFalse();
+        assertThat(deactivatedCard.isActive()).isFalse();
     }
 
     @Test
@@ -154,11 +164,22 @@ public class UserControllerIT extends AbstractIntegrationTest{
         user.setActive(true);
 
         UserEntity savedUser = userRepository.save(user);
+        PaymentCardEntity card = new PaymentCardEntity();
+        card.setUser(savedUser);
+        card.setCardNumber("1111222233334444");
+        card.setHolderName("Ivan Ivanov");
+        card.setExpirationDate(LocalDate.of(2030, 1, 1));
+        card.setActive(true);
+
+        PaymentCardEntity savedCard = paymentCardRepository.save(card);
 
         mockMvc.perform(delete("/users/{id}", savedUser.getId()))
                 .andExpect(status().isNoContent());
 
-        assertThat(userRepository.findById(savedUser.getId())).isEmpty();
+        UserEntity deletedUser = userRepository.findById(savedUser.getId()).orElseThrow();
+        PaymentCardEntity deletedCard = paymentCardRepository.findById(savedCard.getId()).orElseThrow();
+        assertThat(deletedUser.isActive()).isFalse();
+        assertThat(deletedCard.isActive()).isFalse();
     }
 
     @Test

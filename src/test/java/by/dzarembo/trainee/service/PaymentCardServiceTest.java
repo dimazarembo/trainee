@@ -199,24 +199,23 @@ public class PaymentCardServiceTest {
     }
 
     @Test
-    public void delete_shouldRemoveCardAndSaveUser_whenCardExists() {
+    public void delete_shouldSoftDeleteCard_whenCardExists() {
         Long userId = 1L;
         Long cardId = 1L;
         UserEntity user = buildUser(userId);
-        PaymentCardEntity card = buildCard(cardId, null);
-        user.addPaymentCard(card);
+        PaymentCardEntity card = buildCard(cardId, user);
 
         when(paymentCardRepository.findById(cardId)).thenReturn(Optional.of(card));
-        when(userRepository.save(user)).thenReturn(user);
+        when(paymentCardRepository.save(card)).thenReturn(card);
         when(cacheManager.getCache("usersWithCards")).thenReturn(cache);
 
         paymentCardService.delete(cardId);
 
-        assertThat(user.getCards()).doesNotContain(card);
-        assertThat(card.getUser()).isNull();
+        assertThat(card.isActive()).isFalse();
+        assertThat(card.getUser()).isEqualTo(user);
 
         verify(paymentCardRepository).findById(cardId);
-        verify(userRepository).save(user);
+        verify(paymentCardRepository).save(card);
         verify(cacheManager).getCache("usersWithCards");
         verify(cache).evict(userId);
     }

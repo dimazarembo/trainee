@@ -244,6 +244,7 @@ public class PaymentCardControllerIT extends AbstractIntegrationTest {
         mockMvc.perform(delete("/cards/{id}", savedCard.getId()))
                 .andExpect(status().isNoContent());
 
-        assertThat(paymentCardRepository.findById(savedCard.getId())).isEmpty();
+        PaymentCardEntity deletedCard = paymentCardRepository.findById(savedCard.getId()).orElseThrow();
+        assertThat(deletedCard.isActive()).isFalse();
     }
 }

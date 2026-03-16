@@ -47,17 +47,12 @@ public class UserEntity {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @Builder.Default
     private List<PaymentCardEntity> cards = new ArrayList<>();
 
     public void addPaymentCard(PaymentCardEntity card) {
         cards.add(card);
         card.setUser(this);
-    }
-
-    public void removePaymentCard(PaymentCardEntity card) {
-        cards.remove(card);
-        card.setUser(null);
     }
 }

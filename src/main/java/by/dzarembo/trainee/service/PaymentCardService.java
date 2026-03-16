@@ -104,11 +104,7 @@ public class PaymentCardService {
 
     @Transactional
     public void delete(Long cardId) {
-        PaymentCardEntity card = getById(cardId);
-        UserEntity user = card.getUser();
-        user.removePaymentCard(card);
-        userRepository.save(user);
-        evictUserWithCardsCache(user.getId());
+        deactivate(cardId);
     }
 
     private void evictUserWithCardsCache(Long userId) {

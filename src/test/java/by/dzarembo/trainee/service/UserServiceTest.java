@@ -150,30 +150,50 @@ public class UserServiceTest {
         UserEntity existingUser = new UserEntity();
         existingUser.setId(userId);
         existingUser.setActive(true);
+        PaymentCardEntity firstCard = new PaymentCardEntity();
+        firstCard.setActive(true);
+        PaymentCardEntity secondCard = new PaymentCardEntity();
+        secondCard.setActive(true);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(paymentCardRepository.findAllByUserId(userId)).thenReturn(List.of(firstCard, secondCard));
         when(userRepository.save(existingUser)).thenReturn(existingUser);
 
         UserEntity result = userService.deactivate(userId);
 
         assertThat(result).isEqualTo(existingUser);
         assertThat(result.isActive()).isFalse();
+        assertThat(firstCard.isActive()).isFalse();
+        assertThat(secondCard.isActive()).isFalse();
 
         verify(userRepository).findById(userId);
+        verify(paymentCardRepository).findAllByUserId(userId);
         verify(userRepository).save(existingUser);
     }
 
     @Test
-    public void delete_shouldDeleteUser_whenUserExists() {
+    public void delete_shouldSoftDeleteUserAndCards_whenUserExists() {
         Long userId = 1L;
         UserEntity existingUser = new UserEntity();
         existingUser.setId(userId);
+        existingUser.setActive(true);
+        PaymentCardEntity firstCard = new PaymentCardEntity();
+        firstCard.setActive(true);
+        PaymentCardEntity secondCard = new PaymentCardEntity();
+        secondCard.setActive(true);
+
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(paymentCardRepository.findAllByUserId(userId)).thenReturn(List.of(firstCard, secondCard));
+        when(userRepository.save(existingUser)).thenReturn(existingUser);
 
         userService.delete(userId);
 
         verify(userRepository).findById(userId);
-        verify(userRepository).delete(existingUser);
+        verify(paymentCardRepository).findAllByUserId(userId);
+        verify(userRepository).save(existingUser);
+        assertThat(existingUser.isActive()).isFalse();
+        assertThat(firstCard.isActive()).isFalse();
+        assertThat(secondCard.isActive()).isFalse();
     }
 
     @Test
