@@ -49,8 +49,8 @@ public class PaymentCardServiceTest {
         UserEntity user = buildUser(userId);
         PaymentCardEntity card = buildCard(10L, null);
 
-        when(paymentCardRepository.countByUserIdJpql(userId)).thenReturn(0L);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(paymentCardRepository.countByUserId(userId)).thenReturn(0L);
+        when(userRepository.findByIdForUpdate(userId)).thenReturn(Optional.of(user));
         when(paymentCardRepository.saveAndFlush(card)).thenReturn(card);
 
         PaymentCardEntity result = paymentCardService.create(userId, card);
@@ -59,8 +59,8 @@ public class PaymentCardServiceTest {
         assertThat(card.getUser()).isEqualTo(user);
         assertThat(user.getCards()).contains(card);
 
-        verify(paymentCardRepository).countByUserIdJpql(userId);
-        verify(userRepository).findById(userId);
+        verify(userRepository).findByIdForUpdate(userId);
+        verify(paymentCardRepository).countByUserId(userId);
         verify(paymentCardRepository).saveAndFlush(card);
         verify(userWithCardsCacheEvictor).evictAfterCommit(userId);
     }

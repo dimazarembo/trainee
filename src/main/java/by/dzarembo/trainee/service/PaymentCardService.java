@@ -28,12 +28,12 @@ public class PaymentCardService {
 
     @Transactional
     public PaymentCardEntity create(Long userId, PaymentCardEntity card) {
+        UserEntity user = userRepository.findByIdForUpdate(userId)
+                .orElseThrow(() -> new UserNotFoundException(String.format("User with id %d not found", userId)));
+
         if (countByUserId(userId) >= 5) {
             throw new CardLimitExceedException(String.format("User with id %d already has 5 cards", userId));
         }
-
-        UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(String.format("User with id %d not found", userId)));
 
         user.addPaymentCard(card);
 
@@ -101,7 +101,7 @@ public class PaymentCardService {
 
     private long countByUserId(Long userId) {
 
-        return paymentCardRepository.countByUserIdJpql(userId);
+        return paymentCardRepository.countByUserId(userId);
     }
 
     @Transactional

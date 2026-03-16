@@ -12,9 +12,6 @@ public interface PaymentCardRepository extends JpaRepository<PaymentCardEntity, 
         JpaSpecificationExecutor<PaymentCardEntity> {
     List<PaymentCardEntity> findAllByUserId(Long userId);
 
-    @Query(nativeQuery = true, value = "select * from payment_cards where user_id = :userId")
-    List<PaymentCardEntity> findAllByUserIdNative(@Param("userId") Long userId);
-
     @Query(value = "select count(pce.id) from PaymentCardEntity pce where pce.user.id =:userId")
-    long countByUserIdJpql(@Param("userId") Long userId);
+    long countByUserId(@Param("userId") Long userId);
 }
