@@ -1,5 +1,6 @@
 package by.dzarembo.trainee.service;
 
+import by.dzarembo.trainee.cache.UserWithCardsCacheEvictor;
 import by.dzarembo.trainee.entity.PaymentCardEntity;
 import by.dzarembo.trainee.entity.UserEntity;
 import by.dzarembo.trainee.exception.PaymentCardNotFoundException;
@@ -10,8 +11,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -39,10 +38,7 @@ public class PaymentCardServiceTest {
     private UserRepository userRepository;
 
     @Mock
-    private CacheManager cacheManager;
-
-    @Mock
-    private Cache cache;
+    private UserWithCardsCacheEvictor userWithCardsCacheEvictor;
 
     @InjectMocks
     private PaymentCardService paymentCardService;
@@ -56,7 +52,6 @@ public class PaymentCardServiceTest {
         when(paymentCardRepository.countByUserIdJpql(userId)).thenReturn(0L);
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(paymentCardRepository.saveAndFlush(card)).thenReturn(card);
-        when(cacheManager.getCache("usersWithCards")).thenReturn(cache);
 
         PaymentCardEntity result = paymentCardService.create(userId, card);
 
@@ -67,8 +62,7 @@ public class PaymentCardServiceTest {
         verify(paymentCardRepository).countByUserIdJpql(userId);
         verify(userRepository).findById(userId);
         verify(paymentCardRepository).saveAndFlush(card);
-        verify(cacheManager).getCache("usersWithCards");
-        verify(cache).evict(userId);
+        verify(userWithCardsCacheEvictor).evictAfterCommit(userId);
     }
 
     @Test
@@ -137,7 +131,6 @@ public class PaymentCardServiceTest {
 
         when(paymentCardRepository.findById(cardId)).thenReturn(Optional.of(existingCard));
         when(paymentCardRepository.save(existingCard)).thenReturn(existingCard);
-        when(cacheManager.getCache("usersWithCards")).thenReturn(cache);
 
         PaymentCardEntity result = paymentCardService.update(cardId, updatedCard);
 
@@ -148,8 +141,7 @@ public class PaymentCardServiceTest {
 
         verify(paymentCardRepository).findById(cardId);
         verify(paymentCardRepository).save(existingCard);
-        verify(cacheManager).getCache("usersWithCards");
-        verify(cache).evict(userId);
+        verify(userWithCardsCacheEvictor).evictAfterCommit(userId);
     }
 
     @Test
@@ -162,7 +154,6 @@ public class PaymentCardServiceTest {
 
         when(paymentCardRepository.findById(cardId)).thenReturn(Optional.of(existingCard));
         when(paymentCardRepository.save(existingCard)).thenReturn(existingCard);
-        when(cacheManager.getCache("usersWithCards")).thenReturn(cache);
 
         PaymentCardEntity result = paymentCardService.activate(cardId);
 
@@ -171,8 +162,7 @@ public class PaymentCardServiceTest {
 
         verify(paymentCardRepository).findById(cardId);
         verify(paymentCardRepository).save(existingCard);
-        verify(cacheManager).getCache("usersWithCards");
-        verify(cache).evict(userId);
+        verify(userWithCardsCacheEvictor).evictAfterCommit(userId);
     }
 
     @Test
@@ -185,7 +175,6 @@ public class PaymentCardServiceTest {
 
         when(paymentCardRepository.findById(cardId)).thenReturn(Optional.of(existingCard));
         when(paymentCardRepository.save(existingCard)).thenReturn(existingCard);
-        when(cacheManager.getCache("usersWithCards")).thenReturn(cache);
 
         PaymentCardEntity result = paymentCardService.deactivate(cardId);
 
@@ -194,8 +183,7 @@ public class PaymentCardServiceTest {
 
         verify(paymentCardRepository).findById(cardId);
         verify(paymentCardRepository).save(existingCard);
-        verify(cacheManager).getCache("usersWithCards");
-        verify(cache).evict(userId);
+        verify(userWithCardsCacheEvictor).evictAfterCommit(userId);
     }
 
     @Test
@@ -207,7 +195,6 @@ public class PaymentCardServiceTest {
 
         when(paymentCardRepository.findById(cardId)).thenReturn(Optional.of(card));
         when(paymentCardRepository.save(card)).thenReturn(card);
-        when(cacheManager.getCache("usersWithCards")).thenReturn(cache);
 
         paymentCardService.delete(cardId);
 
@@ -216,8 +203,7 @@ public class PaymentCardServiceTest {
 
         verify(paymentCardRepository).findById(cardId);
         verify(paymentCardRepository).save(card);
-        verify(cacheManager).getCache("usersWithCards");
-        verify(cache).evict(userId);
+        verify(userWithCardsCacheEvictor).evictAfterCommit(userId);
     }
 
     private UserEntity buildUser(Long userId) {

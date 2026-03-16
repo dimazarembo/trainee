@@ -1,5 +1,6 @@
 package by.dzarembo.trainee.service;
 
+import by.dzarembo.trainee.cache.UserWithCardsCacheEvictor;
 import by.dzarembo.trainee.entity.PaymentCardEntity;
 import by.dzarembo.trainee.entity.UserEntity;
 import by.dzarembo.trainee.exception.CardLimitExceedException;
@@ -8,14 +9,12 @@ import by.dzarembo.trainee.exception.UserNotFoundException;
 import by.dzarembo.trainee.repository.PaymentCardRepository;
 import by.dzarembo.trainee.repository.UserRepository;
 import by.dzarembo.trainee.specification.PaymentCardSpecification;
-import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -25,7 +24,7 @@ public class PaymentCardService {
 
     private final PaymentCardRepository paymentCardRepository;
     private final UserRepository userRepository;
-    private final CacheManager cacheManager;
+    private final UserWithCardsCacheEvictor userWithCardsCacheEvictor;
 
     @Transactional
     public PaymentCardEntity create(Long userId, PaymentCardEntity card) {
@@ -40,21 +39,24 @@ public class PaymentCardService {
 
         PaymentCardEntity savedCard = paymentCardRepository.saveAndFlush(card);
 
-        evictUserWithCardsCache(userId);
+        userWithCardsCacheEvictor.evictAfterCommit(userId);
         return savedCard;
     }
 
+    @Transactional(readOnly = true)
     public PaymentCardEntity getById(Long id) {
         return paymentCardRepository.findById(id)
                 .orElseThrow(() -> new PaymentCardNotFoundException(String.format("Payment card with id %d not found", id)));
     }
 
+    @Transactional(readOnly = true)
     public Page<PaymentCardEntity> getAll(String name, String surname, Pageable pageable) {
         Specification<PaymentCardEntity> specification =
                 PaymentCardSpecification.hasUserName(name).and(PaymentCardSpecification.hasUserSurname(surname));
         return paymentCardRepository.findAll(specification, pageable);
     }
 
+    @Transactional(readOnly = true)
     public List<PaymentCardEntity> getAllByUserId(Long userId) {
         userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
@@ -70,7 +72,7 @@ public class PaymentCardService {
         existingPaymentCard.setExpirationDate(card.getExpirationDate());
         var savedCard = paymentCardRepository.save(existingPaymentCard);
 
-        evictUserWithCardsCache(existingPaymentCard.getUser().getId());
+        userWithCardsCacheEvictor.evictAfterCommit(existingPaymentCard.getUser().getId());
 
         return savedCard;
     }
@@ -81,7 +83,7 @@ public class PaymentCardService {
         existingPaymentCard.setActive(true);
         var savedCard = paymentCardRepository.save(existingPaymentCard);
 
-        evictUserWithCardsCache(existingPaymentCard.getUser().getId());
+        userWithCardsCacheEvictor.evictAfterCommit(existingPaymentCard.getUser().getId());
 
         return savedCard;
     }
@@ -92,7 +94,7 @@ public class PaymentCardService {
         existingPaymentCard.setActive(false);
         var savedCard = paymentCardRepository.save(existingPaymentCard);
 
-        evictUserWithCardsCache(existingPaymentCard.getUser().getId());
+        userWithCardsCacheEvictor.evictAfterCommit(existingPaymentCard.getUser().getId());
 
         return savedCard;
     }
@@ -105,12 +107,5 @@ public class PaymentCardService {
     @Transactional
     public void delete(Long cardId) {
         deactivate(cardId);
-    }
-
-    private void evictUserWithCardsCache(Long userId) {
-        Cache cache = cacheManager.getCache("usersWithCards");
-        if (cache != null) {
-            cache.evict(userId);
-        }
     }
 }

@@ -1,5 +1,6 @@
 package by.dzarembo.trainee.service;
 
+import by.dzarembo.trainee.cache.UserWithCardsCacheEvictor;
 import by.dzarembo.trainee.dto.UserCardInfoResponse;
 import by.dzarembo.trainee.dto.UserWithCardsResponse;
 import by.dzarembo.trainee.entity.PaymentCardEntity;
@@ -40,6 +41,8 @@ public class UserServiceTest {
     PaymentCardRepository paymentCardRepository;
     @Mock
     UserWithCardsMapper userWithCardsMapper;
+    @Mock
+    UserWithCardsCacheEvictor userWithCardsCacheEvictor;
     @InjectMocks
     UserService userService;
 

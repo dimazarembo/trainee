@@ -1,5 +1,6 @@
 package by.dzarembo.trainee.integration;
 
+import by.dzarembo.trainee.cache.CacheNames;
 import by.dzarembo.trainee.repository.PaymentCardRepository;
 import by.dzarembo.trainee.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -58,7 +59,7 @@ public abstract class AbstractIntegrationTest {
 
     @BeforeEach
     void cleanUp() {
-        Cache cache = cacheManager.getCache("usersWithCards");
+        Cache cache = cacheManager.getCache(CacheNames.USERS_WITH_CARDS);
         if (cache != null) {
             cache.clear();
         }
