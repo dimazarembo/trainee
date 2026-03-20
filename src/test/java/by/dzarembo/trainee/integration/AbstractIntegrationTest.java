@@ -3,12 +3,16 @@ package by.dzarembo.trainee.integration;
 import by.dzarembo.trainee.cache.CacheNames;
 import by.dzarembo.trainee.repository.PaymentCardRepository;
 import by.dzarembo.trainee.repository.UserRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -20,8 +24,12 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import tools.jackson.databind.ObjectMapper;
 import org.testcontainers.utility.DockerImageName;
 
+import java.util.List;
+
+import by.dzarembo.trainee.security.AuthenticatedUser;
+
 @SpringBootTest
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 @Testcontainers
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public abstract class AbstractIntegrationTest {
@@ -60,13 +68,36 @@ public abstract class AbstractIntegrationTest {
     }
 
     @BeforeEach
-    void cleanUp() {
+    void setUpTestState() {
+        authenticateAsAdmin();
+        clearCache();
+        clearRepositories();
+    }
+
+    private void authenticateAsAdmin() {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        new AuthenticatedUser(1L, "ADMIN"),
+                        null,
+                        List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))
+                )
+        );
+    }
+
+    private void clearCache() {
         Cache cache = cacheManager.getCache(CacheNames.USERS_WITH_CARDS);
         if (cache != null) {
             cache.clear();
         }
+    }
 
+    private void clearRepositories() {
         paymentCardRepository.deleteAllInBatch();
         userRepository.deleteAllInBatch();
+    }
+
+    @AfterEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
     }
 }

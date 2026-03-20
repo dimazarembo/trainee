@@ -4,7 +4,7 @@ spring:
   liquibase:
     enabled: true
   datasource:
-    driver-class-name: ${DB_DRIVER_CLASS_NAME}
+    driver-class-name: ${DB_DRIVER_CLASS_NAME:org.postgresql.Driver}
   jpa:
     hibernate:
       ddl-auto: none
