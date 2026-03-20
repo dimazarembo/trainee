@@ -4,9 +4,12 @@ spring:
   liquibase:
     enabled: true
   datasource:
-    driver-class-name: ${DB_DRIVER_CLASS_NAME:org.postgresql.Driver}
+    driver-class-name: ${DB_DRIVER_CLASS_NAME}
   jpa:
     hibernate:
       ddl-auto: none
   cache:
     type: redis
+auth:
+  service:
+    url: ${AUTH_SERVICE_URL}

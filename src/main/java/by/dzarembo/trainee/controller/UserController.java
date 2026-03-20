@@ -3,6 +3,7 @@ package by.dzarembo.trainee.controller;
 import by.dzarembo.trainee.dto.*;
 import by.dzarembo.trainee.mapper.PaymentCardMapper;
 import by.dzarembo.trainee.mapper.UserMapper;
+import by.dzarembo.trainee.security.AccessChecker;
 import by.dzarembo.trainee.service.PaymentCardService;
 import by.dzarembo.trainee.service.UserService;
 import jakarta.validation.Valid;
@@ -23,9 +24,11 @@ public class UserController {
     private final UserMapper userMapper;
     private final PaymentCardService paymentCardService;
     private final PaymentCardMapper paymentCardMapper;
+    private final AccessChecker accessChecker;
 
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
+        accessChecker.checkUserAccess(id);
         return ResponseEntity.ok(userMapper.toResponse(userService.getById(id)));
     }
 
@@ -41,6 +44,7 @@ public class UserController {
 
     @GetMapping("/{userId}/with-cards")
     public ResponseEntity<UserWithCardsResponse> getUserWithCards(@PathVariable Long userId) {
+        accessChecker.checkUserAccess(userId);
         return ResponseEntity.ok(userService.getUserWithCards(userId));
     }
 
@@ -52,21 +56,25 @@ public class UserController {
 
     @PutMapping("/{id}")
     public ResponseEntity<UserResponse> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateRequest userUpdateRequest) {
+        accessChecker.checkUserAccess(id);
         return ResponseEntity.ok(userMapper.toResponse(userService.update(id, userMapper.toEntity(userUpdateRequest))));
     }
 
     @PatchMapping("/{id}/activate")
     public ResponseEntity<UserResponse> activateUser(@PathVariable Long id) {
+        accessChecker.checkUserAccess(id);
         return ResponseEntity.ok(userMapper.toResponse(userService.activate(id)));
     }
 
     @PatchMapping("/{id}/deactivate")
     public ResponseEntity<UserResponse> deactivateUser(@PathVariable Long id) {
+        accessChecker.checkUserAccess(id);
         return ResponseEntity.ok(userMapper.toResponse(userService.deactivate(id)));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUserById(@PathVariable Long id) {
+        accessChecker.checkUserAccess(id);
         userService.delete(id);
         return ResponseEntity.noContent().build();
     }
@@ -74,6 +82,7 @@ public class UserController {
 
     @GetMapping("/{userId}/cards")
     public ResponseEntity<List<PaymentCardResponse>> getCardsByUser(@PathVariable Long userId) {
+        accessChecker.checkUserAccess(userId);
 
         List<PaymentCardResponse> response = paymentCardService.getAllByUserId(userId).stream().map(paymentCardMapper::toResponse).toList();
 
