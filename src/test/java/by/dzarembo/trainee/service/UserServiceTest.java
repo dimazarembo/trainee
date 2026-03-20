@@ -33,7 +33,7 @@ import static org.mockito.Mockito.when;
 
 
 @ExtendWith(MockitoExtension.class)
-public class UserServiceTest {
+class UserServiceTest {
 
     @Mock
     UserRepository userRepository;
@@ -48,7 +48,7 @@ public class UserServiceTest {
 
 
     @Test
-    public void create_shouldReturnUser_whenUserCorrect() {
+    void create_shouldReturnUser_whenUserCorrect() {
         Long userId = 1L;
         UserEntity userEntity = new UserEntity();
         userEntity.setId(userId);
@@ -62,7 +62,7 @@ public class UserServiceTest {
     }
 
     @Test
-    public void getById_shouldReturnUser_whenUserExists() {
+    void getById_shouldReturnUser_whenUserExists() {
         Long userId = 1L;
         UserEntity userEntity = new UserEntity();
         userEntity.setId(userId);
@@ -76,13 +76,13 @@ public class UserServiceTest {
     }
 
     @Test
-    public void getById_shouldThrowException_whenUserDoesNotExist() {
+    void getById_shouldThrowException_whenUserDoesNotExist() {
         Long userId = 1L;
         assertThatThrownBy(() -> userService.getById(userId)).isInstanceOf(UserNotFoundException.class);
     }
 
     @Test
-    public void getAll_shouldReturnAllUsers_whenUserExists() {
+    void getAll_shouldReturnAllUsers_whenUserExists() {
         UserEntity userEntity1 = new UserEntity();
         UserEntity userEntity2 = new UserEntity();
         Pageable pageable = PageRequest.of(0, 10);
@@ -97,7 +97,7 @@ public class UserServiceTest {
     }
 
     @Test
-    public void update_shouldUpdateFieldsAndSaveUser(){
+    void update_shouldUpdateFieldsAndSaveUser(){
         Long userId = 1L;
 
         UserEntity existingUser = new UserEntity();
@@ -129,7 +129,7 @@ public class UserServiceTest {
     }
 
     @Test
-    public void activate_shouldActivateUser_whenUserExists() {
+    void activate_shouldActivateUser_whenUserExists() {
         Long userId = 1L;
         UserEntity existingUser = new UserEntity();
         existingUser.setId(userId);
@@ -148,7 +148,7 @@ public class UserServiceTest {
     }
 
     @Test
-    public void deactivate_shouldDeactivateUser_whenUserExists() {
+    void deactivate_shouldDeactivateUser_whenUserExists() {
         Long userId = 1L;
         UserEntity existingUser = new UserEntity();
         existingUser.setId(userId);
@@ -175,7 +175,7 @@ public class UserServiceTest {
     }
 
     @Test
-    public void delete_shouldSoftDeleteUserAndCards_whenUserExists() {
+    void delete_shouldSoftDeleteUserAndCards_whenUserExists() {
         Long userId = 1L;
         UserEntity existingUser = new UserEntity();
         existingUser.setId(userId);
@@ -200,7 +200,7 @@ public class UserServiceTest {
     }
 
     @Test
-    public void getUserWithCards_shouldBuildResponse_whenUserExist() {
+    void getUserWithCards_shouldBuildResponse_whenUserExist() {
         Long userId = 1L;
         UserEntity userEntity = new UserEntity();
         userEntity.setId(userId);

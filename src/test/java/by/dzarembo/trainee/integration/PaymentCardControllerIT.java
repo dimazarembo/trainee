@@ -14,7 +14,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-public class PaymentCardControllerIT extends AbstractIntegrationTest {
+class PaymentCardControllerIT extends AbstractIntegrationTest {
     @Test
     void createPaymentCard_shouldReturnCreatedCard() throws Exception {
         UserEntity user = new UserEntity();
@@ -83,6 +83,44 @@ public class PaymentCardControllerIT extends AbstractIntegrationTest {
                         .value("User with id " + savedUser.getId() + " already has 5 cards"));
 
         assertThat(paymentCardRepository.findAllByUserId(savedUser.getId())).hasSize(5);
+    }
+
+    @Test
+    void createPaymentCard_shouldAllowNewCard_whenUserHasFourActiveAndOneInactiveCards() throws Exception {
+        UserEntity user = new UserEntity();
+        user.setName("Ivan");
+        user.setSurname("Ivanov");
+        user.setBirthday(LocalDate.of(1995, 5, 10));
+        user.setEmail("ivanov@test.com");
+        user.setActive(true);
+
+        UserEntity savedUser = userRepository.save(user);
+
+        for (int i = 0; i < 5; i++) {
+            PaymentCardEntity card = new PaymentCardEntity();
+            card.setUser(savedUser);
+            card.setCardNumber("111122223333444" + i);
+            card.setHolderName("Ivan Ivanov");
+            card.setExpirationDate(LocalDate.of(2030 + i, 1, 1));
+            card.setActive(i != 4);
+            paymentCardRepository.save(card);
+        }
+
+        PaymentCardCreateRequest request = PaymentCardCreateRequest.builder()
+                .userId(savedUser.getId())
+                .cardNumber("9999000011112222")
+                .holderName("Ivan Ivanov")
+                .expirationDate(LocalDate.of(2035, 1, 1))
+                .build();
+
+        mockMvc.perform(post("/cards")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.userId").value(savedUser.getId()))
+                .andExpect(jsonPath("$.cardNumber").value("9999000011112222"));
+
+        assertThat(paymentCardRepository.findAllByUserId(savedUser.getId())).hasSize(6);
     }
 
     @Test
@@ -155,6 +193,53 @@ public class PaymentCardControllerIT extends AbstractIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.length()").value(2))
                 .andExpect(jsonPath("$.content[0].id").isNumber());
+    }
+
+    @Test
+    void getCards_shouldFilterByExactUserNameAndSurnameIgnoringCase() throws Exception {
+        UserEntity user1 = new UserEntity();
+        user1.setName("Ivan");
+        user1.setSurname("Ivanov");
+        user1.setBirthday(LocalDate.of(1995, 5, 10));
+        user1.setEmail("ivanov@test.com");
+        user1.setActive(true);
+
+        UserEntity user2 = new UserEntity();
+        user2.setName("Ivanii");
+        user2.setSurname("Ivanovich");
+        user2.setBirthday(LocalDate.of(1990, 1, 1));
+        user2.setEmail("ivanovich@test.com");
+        user2.setActive(true);
+
+        UserEntity savedUser1 = userRepository.save(user1);
+        UserEntity savedUser2 = userRepository.save(user2);
+
+        PaymentCardEntity card1 = new PaymentCardEntity();
+        card1.setUser(savedUser1);
+        card1.setCardNumber("1111222233334444");
+        card1.setHolderName("Ivan Ivanov");
+        card1.setExpirationDate(LocalDate.of(2030, 1, 1));
+        card1.setActive(true);
+
+        PaymentCardEntity card2 = new PaymentCardEntity();
+        card2.setUser(savedUser2);
+        card2.setCardNumber("5555666677778888");
+        card2.setHolderName("Ivanii Ivanovich");
+        card2.setExpirationDate(LocalDate.of(2031, 2, 2));
+        card2.setActive(true);
+
+        paymentCardRepository.save(card1);
+        paymentCardRepository.save(card2);
+
+        mockMvc.perform(get("/cards")
+                        .param("name", "ivan")
+                        .param("surname", "ivanov")
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].userId").value(savedUser1.getId()))
+                .andExpect(jsonPath("$.content[0].holderName").value("Ivan Ivanov"));
     }
 
 

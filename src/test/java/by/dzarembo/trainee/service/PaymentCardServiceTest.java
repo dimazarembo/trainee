@@ -29,7 +29,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class PaymentCardServiceTest {
+class PaymentCardServiceTest {
 
     @Mock
     private PaymentCardRepository paymentCardRepository;
@@ -44,12 +44,12 @@ public class PaymentCardServiceTest {
     private PaymentCardService paymentCardService;
 
     @Test
-    public void create_shouldReturnCard_whenCardCorrect() {
+    void create_shouldReturnCard_whenCardCorrect() {
         Long userId = 1L;
         UserEntity user = buildUser(userId);
         PaymentCardEntity card = buildCard(10L, null);
 
-        when(paymentCardRepository.countByUserId(userId)).thenReturn(0L);
+        when(paymentCardRepository.countByUserIdAndActiveTrue(userId)).thenReturn(0L);
         when(userRepository.findByIdForUpdate(userId)).thenReturn(Optional.of(user));
         when(paymentCardRepository.saveAndFlush(card)).thenReturn(card);
 
@@ -60,13 +60,13 @@ public class PaymentCardServiceTest {
         assertThat(user.getCards()).contains(card);
 
         verify(userRepository).findByIdForUpdate(userId);
-        verify(paymentCardRepository).countByUserId(userId);
+        verify(paymentCardRepository).countByUserIdAndActiveTrue(userId);
         verify(paymentCardRepository).saveAndFlush(card);
         verify(userWithCardsCacheEvictor).evictAfterCommit(userId);
     }
 
     @Test
-    public void getById_shouldReturnCard_whenCardExists() {
+    void getById_shouldReturnCard_whenCardExists() {
         Long cardId = 1L;
         PaymentCardEntity card = buildCard(cardId, null);
 
@@ -79,7 +79,7 @@ public class PaymentCardServiceTest {
     }
 
     @Test
-    public void getById_shouldThrowException_whenCardDoesNotExist() {
+    void getById_shouldThrowException_whenCardDoesNotExist() {
         Long cardId = 1L;
 
         assertThatThrownBy(() -> paymentCardService.getById(cardId))
@@ -87,7 +87,7 @@ public class PaymentCardServiceTest {
     }
 
     @Test
-    public void getAll_shouldReturnAllCards_whenCardsExist() {
+    void getAll_shouldReturnAllCards_whenCardsExist() {
         PaymentCardEntity card1 = buildCard(1L, null);
         PaymentCardEntity card2 = buildCard(2L, null);
         Pageable pageable = PageRequest.of(0, 10);
@@ -102,7 +102,7 @@ public class PaymentCardServiceTest {
     }
 
     @Test
-    public void getAllByUserId_shouldReturnCards_whenUserExists() {
+    void getAllByUserId_shouldReturnCards_whenUserExists() {
         Long userId = 1L;
         UserEntity user = buildUser(userId);
         PaymentCardEntity card1 = buildCard(1L, user);
@@ -119,7 +119,7 @@ public class PaymentCardServiceTest {
     }
 
     @Test
-    public void update_shouldUpdateFieldsAndSaveCard() {
+    void update_shouldUpdateFieldsAndSaveCard() {
         Long userId = 1L;
         Long cardId = 1L;
         UserEntity user = buildUser(userId);
@@ -145,7 +145,7 @@ public class PaymentCardServiceTest {
     }
 
     @Test
-    public void activate_shouldActivateCard_whenCardExists() {
+    void activate_shouldActivateCard_whenCardExists() {
         Long userId = 1L;
         Long cardId = 1L;
         UserEntity user = buildUser(userId);
@@ -166,7 +166,7 @@ public class PaymentCardServiceTest {
     }
 
     @Test
-    public void deactivate_shouldDeactivateCard_whenCardExists() {
+    void deactivate_shouldDeactivateCard_whenCardExists() {
         Long userId = 1L;
         Long cardId = 1L;
         UserEntity user = buildUser(userId);
@@ -187,7 +187,7 @@ public class PaymentCardServiceTest {
     }
 
     @Test
-    public void delete_shouldSoftDeleteCard_whenCardExists() {
+    void delete_shouldSoftDeleteCard_whenCardExists() {
         Long userId = 1L;
         Long cardId = 1L;
         UserEntity user = buildUser(userId);

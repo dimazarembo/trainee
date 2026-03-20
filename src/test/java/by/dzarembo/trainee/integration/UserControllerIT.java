@@ -14,9 +14,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-public class UserControllerIT extends AbstractIntegrationTest{
+class UserControllerIT extends AbstractIntegrationTest{
     @Test
-    public void createUser_shouldReturnCreatedUser() throws Exception {
+    void createUser_shouldReturnCreatedUser() throws Exception {
         UserCreateRequest request = UserCreateRequest.builder()
                 .name("Ivan")
                 .surname("Ivanov")
@@ -207,6 +207,36 @@ public class UserControllerIT extends AbstractIntegrationTest{
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.length()").value(2))
                 .andExpect(jsonPath("$.content[0].id").isNumber());
+    }
+
+    @Test
+    void getUsers_shouldFilterByExactNameAndSurnameIgnoringCase() throws Exception {
+        UserEntity user1 = new UserEntity();
+        user1.setName("Ivan");
+        user1.setSurname("Ivanov");
+        user1.setBirthday(LocalDate.of(1995, 5, 10));
+        user1.setEmail("ivanov@test.com");
+        user1.setActive(true);
+
+        UserEntity user2 = new UserEntity();
+        user2.setName("Ivanii");
+        user2.setSurname("Ivanovich");
+        user2.setBirthday(LocalDate.of(1990, 1, 1));
+        user2.setEmail("ivanovich@test.com");
+        user2.setActive(true);
+
+        userRepository.save(user1);
+        userRepository.save(user2);
+
+        mockMvc.perform(get("/users")
+                        .param("name", "ivan")
+                        .param("surname", "ivanov")
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].name").value("Ivan"))
+                .andExpect(jsonPath("$.content[0].surname").value("Ivanov"));
     }
 
     @Test

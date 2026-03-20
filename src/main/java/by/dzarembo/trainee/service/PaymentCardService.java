@@ -31,7 +31,7 @@ public class PaymentCardService {
         UserEntity user = userRepository.findByIdForUpdate(userId)
                 .orElseThrow(() -> new UserNotFoundException(String.format("User with id %d not found", userId)));
 
-        if (countByUserId(userId) >= 5) {
+        if (countActiveByUserId(userId) >= 5) {
             throw new CardLimitExceedException(String.format("User with id %d already has 5 cards", userId));
         }
 
@@ -45,6 +45,10 @@ public class PaymentCardService {
 
     @Transactional(readOnly = true)
     public PaymentCardEntity getById(Long id) {
+        return findPaymentCardById(id);
+    }
+
+    private PaymentCardEntity findPaymentCardById(Long id) {
         return paymentCardRepository.findById(id)
                 .orElseThrow(() -> new PaymentCardNotFoundException(String.format("Payment card with id %d not found", id)));
     }
@@ -66,7 +70,7 @@ public class PaymentCardService {
 
     @Transactional
     public PaymentCardEntity update(Long cardId, PaymentCardEntity card) {
-        PaymentCardEntity existingPaymentCard = getById(cardId);
+        PaymentCardEntity existingPaymentCard = findPaymentCardById(cardId);
         existingPaymentCard.setCardNumber(card.getCardNumber());
         existingPaymentCard.setHolderName(card.getHolderName());
         existingPaymentCard.setExpirationDate(card.getExpirationDate());
@@ -79,7 +83,7 @@ public class PaymentCardService {
 
     @Transactional
     public PaymentCardEntity activate(Long cardId) {
-        PaymentCardEntity existingPaymentCard = getById(cardId);
+        PaymentCardEntity existingPaymentCard = findPaymentCardById(cardId);
         existingPaymentCard.setActive(true);
         var savedCard = paymentCardRepository.save(existingPaymentCard);
 
@@ -90,22 +94,26 @@ public class PaymentCardService {
 
     @Transactional
     public PaymentCardEntity deactivate(Long cardId) {
-        PaymentCardEntity existingPaymentCard = getById(cardId);
-        existingPaymentCard.setActive(false);
-        var savedCard = paymentCardRepository.save(existingPaymentCard);
-
-        userWithCardsCacheEvictor.evictAfterCommit(existingPaymentCard.getUser().getId());
-
-        return savedCard;
+        return deactivateCard(cardId);
     }
 
-    private long countByUserId(Long userId) {
+    private long countActiveByUserId(Long userId) {
 
-        return paymentCardRepository.countByUserId(userId);
+        return paymentCardRepository.countByUserIdAndActiveTrue(userId);
     }
 
     @Transactional
     public void delete(Long cardId) {
-        deactivate(cardId);
+        deactivateCard(cardId);
+    }
+
+    private PaymentCardEntity deactivateCard(Long cardId) {
+        PaymentCardEntity existingPaymentCard = findPaymentCardById(cardId);
+        existingPaymentCard.setActive(false);
+        PaymentCardEntity savedCard = paymentCardRepository.save(existingPaymentCard);
+
+        userWithCardsCacheEvictor.evictAfterCommit(existingPaymentCard.getUser().getId());
+
+        return savedCard;
     }
 }

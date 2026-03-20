@@ -39,6 +39,10 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public UserEntity getById(Long id) {
+        return findUserById(id);
+    }
+
+    private UserEntity findUserById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
     }
@@ -51,7 +55,7 @@ public class UserService {
 
     @Transactional
     public UserEntity update(Long id, UserEntity userEntity) {
-        UserEntity existingUser = getById(id);
+        UserEntity existingUser = findUserById(id);
         existingUser.setName(userEntity.getName());
         existingUser.setSurname(userEntity.getSurname());
         existingUser.setEmail(userEntity.getEmail());
@@ -65,7 +69,7 @@ public class UserService {
 
     @Transactional
     public UserEntity activate(Long id) {
-        UserEntity existingUser = getById(id);
+        UserEntity existingUser = findUserById(id);
         existingUser.setActive(true);
         var savedUser = userRepository.save(existingUser);
 
@@ -88,7 +92,7 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserWithCardsResponse getUserWithCards(Long userId) {
         log.info("Loading user with cards from DB for userId={}", userId);
-        UserEntity userEntity = getById(userId);
+        UserEntity userEntity = findUserById(userId);
         List<PaymentCardEntity> cards = paymentCardRepository.findAllByUserId(userId);
 
         UserWithCardsResponse response = userWithCardsMapper.toResponse(userEntity);
@@ -97,7 +101,7 @@ public class UserService {
     }
 
     private UserEntity deactivateUserWithCards(Long userId) {
-        UserEntity user = getById(userId);
+        UserEntity user = findUserById(userId);
 
         List<PaymentCardEntity> cards = paymentCardRepository.findAllByUserId(userId);
         for (PaymentCardEntity paymentCardEntity : cards) {

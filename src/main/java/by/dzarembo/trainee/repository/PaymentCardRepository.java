@@ -21,6 +21,6 @@ public interface PaymentCardRepository extends JpaRepository<PaymentCardEntity, 
     @EntityGraph(attributePaths = "user")
     Page<PaymentCardEntity> findAll(Specification<PaymentCardEntity> specification, Pageable pageable);
 
-    @Query(value = "select count(pce.id) from PaymentCardEntity pce where pce.user.id =:userId")
-    long countByUserId(@Param("userId") Long userId);
+    @Query(value = "select count(pce.id) from PaymentCardEntity pce where pce.user.id = :userId and pce.active = true")
+    long countByUserIdAndActiveTrue(@Param("userId") Long userId);
 }
