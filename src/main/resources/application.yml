@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: trainee
+  liquibase:
+    enabled: true
+  datasource:
+    driver-class-name: ${DB_DRIVER_CLASS_NAME:org.postgresql.Driver}
+  jpa:
+    hibernate:
+      ddl-auto: none
+  cache:
+    type: redis
