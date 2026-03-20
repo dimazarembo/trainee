@@ -222,7 +222,7 @@ class UserServiceTest {
         UserWithCardsResponse result = userService.getUserWithCards(userId);
 
         assertThat(result).isEqualTo(userWithCardsResponse);
-        assertThat(result.getCards().size()).isEqualTo(2);
+        assertThat(result.getCards()).hasSize(2);
 
         verify(userRepository).findById(userId);
         verify(paymentCardRepository).findAllByUserId(userId);
