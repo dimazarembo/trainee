@@ -3,6 +3,7 @@ package by.dzarembo.trainee.integration;
 import by.dzarembo.trainee.cache.CacheNames;
 import by.dzarembo.trainee.repository.PaymentCardRepository;
 import by.dzarembo.trainee.repository.UserRepository;
+import by.dzarembo.trainee.security.SecurityRoles;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,9 +78,9 @@ public abstract class AbstractIntegrationTest {
     private void authenticateAsAdmin() {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(
-                        new AuthenticatedUser(1L, "ADMIN"),
+                        new AuthenticatedUser(1L, SecurityRoles.ADMIN),
                         null,
-                        List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))
+                        List.of(new SimpleGrantedAuthority(SecurityRoles.ROLE_ADMIN))
                 )
         );
     }

@@ -19,7 +19,7 @@ public class CurrentUserService {
 
     public boolean isAdmin() {
         AuthenticatedUser currentUser = getCurrentUser();
-        return currentUser != null && "ADMIN".equals(currentUser.role());
+        return currentUser != null && SecurityRoles.ADMIN.equals(currentUser.role());
     }
 
     public Long getCurrentUserId() {
