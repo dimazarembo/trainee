@@ -10,3 +10,6 @@ spring:
       ddl-auto: none
   cache:
     type: redis
+auth:
+  service:
+    url: ${AUTH_SERVICE_URL}
