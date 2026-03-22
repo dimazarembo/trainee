@@ -28,9 +28,9 @@ class JwtAccessDeniedHandlerTest {
 
         JsonNode body = objectMapper.readTree(response.getContentAsByteArray());
         assertThat(body.get("status").asInt()).isEqualTo(MockHttpServletResponse.SC_FORBIDDEN);
-        assertThat(body.get("error").asText()).isEqualTo("Forbidden");
-        assertThat(body.get("message").asText()).isEqualTo("Access denied");
-        assertThat(body.get("path").asText()).isEqualTo("/api/cards/10");
-        assertThat(body.get("timestamp").asText()).isNotBlank();
+        assertThat(body.get("error").asString()).isEqualTo("Forbidden");
+        assertThat(body.get("message").asString()).isEqualTo("Access denied");
+        assertThat(body.get("path").asString()).isEqualTo("/api/cards/10");
+        assertThat(body.get("timestamp").asString()).isNotBlank();
     }
 }
