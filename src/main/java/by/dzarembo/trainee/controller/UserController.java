@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,11 +26,13 @@ public class UserController {
     private final PaymentCardMapper paymentCardMapper;
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or authentication.principal.userId == #id")
     public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
         return ResponseEntity.ok(userMapper.toResponse(userService.getById(id)));
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<UserResponse>> getUsers(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String surname,
@@ -40,32 +43,38 @@ public class UserController {
     }
 
     @GetMapping("/{userId}/with-cards")
+    @PreAuthorize("hasRole('ADMIN') or authentication.principal.userId == #userId")
     public ResponseEntity<UserWithCardsResponse> getUserWithCards(@PathVariable Long userId) {
         return ResponseEntity.ok(userService.getUserWithCards(userId));
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserCreateRequest userCreateRequest) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(userMapper.toResponse(userService.create(userMapper.toEntity(userCreateRequest))));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or authentication.principal.userId == #id")
     public ResponseEntity<UserResponse> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateRequest userUpdateRequest) {
         return ResponseEntity.ok(userMapper.toResponse(userService.update(id, userMapper.toEntity(userUpdateRequest))));
     }
 
     @PatchMapping("/{id}/activate")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponse> activateUser(@PathVariable Long id) {
         return ResponseEntity.ok(userMapper.toResponse(userService.activate(id)));
     }
 
     @PatchMapping("/{id}/deactivate")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponse> deactivateUser(@PathVariable Long id) {
         return ResponseEntity.ok(userMapper.toResponse(userService.deactivate(id)));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteUserById(@PathVariable Long id) {
         userService.delete(id);
         return ResponseEntity.noContent().build();
@@ -73,8 +82,8 @@ public class UserController {
 
 
     @GetMapping("/{userId}/cards")
+    @PreAuthorize("hasRole('ADMIN') or authentication.principal.userId == #userId")
     public ResponseEntity<List<PaymentCardResponse>> getCardsByUser(@PathVariable Long userId) {
-
         List<PaymentCardResponse> response = paymentCardService.getAllByUserId(userId).stream().map(paymentCardMapper::toResponse).toList();
 
         return ResponseEntity.ok(response);
