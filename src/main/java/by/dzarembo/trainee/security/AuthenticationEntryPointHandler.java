@@ -16,7 +16,7 @@ import java.time.Instant;
 
 @Component
 @RequiredArgsConstructor
-public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
+public class AuthenticationEntryPointHandler implements AuthenticationEntryPoint {
     private final ObjectMapper objectMapper;
 
     @Override

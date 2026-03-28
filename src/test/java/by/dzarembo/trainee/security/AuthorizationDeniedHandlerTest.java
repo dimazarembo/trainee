@@ -10,13 +10,13 @@ import tools.jackson.databind.ObjectMapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class JwtAccessDeniedHandlerTest {
+class AuthorizationDeniedHandlerTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
     void handle_shouldWriteForbiddenJsonResponse_whenAccessDenied() throws Exception {
-        JwtAccessDeniedHandler handler = new JwtAccessDeniedHandler(objectMapper);
+        AuthorizationDeniedHandler handler = new AuthorizationDeniedHandler(objectMapper);
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setRequestURI("/api/cards/10");
         MockHttpServletResponse response = new MockHttpServletResponse();

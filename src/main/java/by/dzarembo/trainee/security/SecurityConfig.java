@@ -3,14 +3,15 @@ package by.dzarembo.trainee.security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.client.RestClient;
 
 @Configuration
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private static final String USER_BY_ID_PATH = "/users/*";
@@ -22,26 +23,20 @@ public class SecurityConfig {
     private static final String CARD_ACTIVATE_PATH = "/cards/*/activate";
     private static final String CARD_DEACTIVATE_PATH = "/cards/*/deactivate";
 
-    @Bean
-    RestClient authRestClient(AuthServiceProperties properties) {
-        return RestClient.builder()
-                .baseUrl(properties.url())
-                .build();
-    }
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                            JwtAuthenticationFilter jwtAuthenticationFilter,
-                                            JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
-                                            JwtAccessDeniedHandler jwtAccessDeniedHandler) {
+                                            GatewayAuthenticationFilter gatewayAuthenticationFilter,
+                                            AuthenticationEntryPointHandler authenticationEntryPointHandler,
+                                            AuthorizationDeniedHandler authorizationDeniedHandler) {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint(jwtAuthenticationEntryPoint)
-                        .accessDeniedHandler(jwtAccessDeniedHandler)
+                        .authenticationEntryPoint(authenticationEntryPointHandler)
+                        .accessDeniedHandler(authorizationDeniedHandler)
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET, USER_BY_ID_PATH, USER_WITH_CARDS_PATH, USER_CARDS_PATH, CARD_BY_ID_PATH)
@@ -67,7 +62,7 @@ public class SecurityConfig {
                         .anyRequest()
                         .authenticated()
                 )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(gatewayAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 }
