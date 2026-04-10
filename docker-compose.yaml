@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: trainee-app
+    image: trainee-user-service
     depends_on:
       postgres:
         condition: service_healthy
