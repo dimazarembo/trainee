@@ -52,12 +52,14 @@ class UserServiceTest {
         Long userId = 1L;
         UserEntity userEntity = new UserEntity();
         userEntity.setId(userId);
+        userEntity.setActive(false);
 
         when(userRepository.save(userEntity)).thenReturn(userEntity);
 
         UserEntity result = userService.create(userEntity);
 
         assertThat(result).isEqualTo(userEntity);
+        assertThat(result.isActive()).isTrue();
         verify(userRepository).save(userEntity);
     }
 

@@ -33,9 +33,10 @@ class UserControllerIT extends AbstractIntegrationTest{
                 .andExpect(jsonPath("$.surname").value("Ivanov"))
                 .andExpect(jsonPath("$.birthday").value("1995-05-10"))
                 .andExpect(jsonPath("$.email").value("ivanov@test.com"))
-                .andExpect(jsonPath("$.active").value(false));
+                .andExpect(jsonPath("$.active").value(true));
 
         assertThat(userRepository.findAll()).hasSize(1);
+        assertThat(userRepository.findAll().getFirst().isActive()).isTrue();
     }
 
 

@@ -33,6 +33,7 @@ public class UserService {
 
     @Transactional
     public UserEntity create(UserEntity userEntity) {
+        userEntity.setActive(true);
         userRepository.save(userEntity);
         return userEntity;
     }
